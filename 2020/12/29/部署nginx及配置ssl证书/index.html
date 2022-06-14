@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-corner-indicator.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ohuai.guru","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本md记录了一次从零配置nginx服务并配置ssl证书的经历 [TOC] 系统版本：CentOS 7 （CentOS Linux release 7.8.2003 (Core)） 一、安装nginx1yum -y install nginx  安装成功后别忘了开启服务： 12sudo systemctl start nginx.servicesudo systemctl enable nginx.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="本md记录了一次从零配置nginx服务并配置ssl证书的经历">
+<meta property="og:url" content="https://ohuai.guru/2020/12/29/%E9%83%A8%E7%BD%B2nginx%E5%8F%8A%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6/index.html">
+<meta property="og:site_name" content="CasperG&#39;s Blog">
+<meta property="og:description" content="本md记录了一次从零配置nginx服务并配置ssl证书的经历 [TOC] 系统版本：CentOS 7 （CentOS Linux release 7.8.2003 (Core)） 一、安装nginx1yum -y install nginx  安装成功后别忘了开启服务： 12sudo systemctl start nginx.servicesudo systemctl enable nginx.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images2015.cnblogs.com/blog/172889/201704/172889-20170418173628696-1685332558.png">
+<meta property="og:image" content="https://i.loli.net/2020/12/30/wDvfgx6nH7haYod.png">
+<meta property="article:published_time" content="2020-12-29T12:18:42.000Z">
+<meta property="article:modified_time" content="2022-06-14T11:46:24.652Z">
+<meta property="article:author" content="David Casper Gu">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images2015.cnblogs.com/blog/172889/201704/172889-20170418173628696-1685332558.png">
+
+<link rel="canonical" href="https://ohuai.guru/2020/12/29/%E9%83%A8%E7%BD%B2nginx%E5%8F%8A%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>本md记录了一次从零配置nginx服务并配置ssl证书的经历 | CasperG's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CasperG's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Some People choose to see the ugliness in the world, the disarray. I choose to see the beauty.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://ohuai.guru/2020/12/29/%E9%83%A8%E7%BD%B2nginx%E5%8F%8A%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="David Casper Gu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CasperG's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          本md记录了一次从零配置nginx服务并配置ssl证书的经历
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-29 12:18:42" itemprop="dateCreated datePublished" datetime="2020-12-29T12:18:42+00:00">2020-12-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-14 11:46:24" itemprop="dateModified" datetime="2022-06-14T11:46:24+00:00">2022-06-14</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="本md记录了一次从零配置nginx服务并配置ssl证书的经历"><a href="#本md记录了一次从零配置nginx服务并配置ssl证书的经历" class="headerlink" title="本md记录了一次从零配置nginx服务并配置ssl证书的经历"></a><strong>本md记录了一次从零配置nginx服务并配置ssl证书的经历</strong></h3><hr>
+<p>[TOC]</p>
+<p>系统版本：CentOS 7 （CentOS Linux release 7.8.2003 (Core)）</p>
+<h5 id="一、安装nginx"><a href="#一、安装nginx" class="headerlink" title="一、安装nginx"></a>一、安装nginx</h5><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum -y install nginx</span><br></pre></td></tr></table></figure>
+
+<p>安装成功后别忘了开启服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl start nginx.service</span><br><span class="line">sudo systemctl enable nginx.service</span><br></pre></td></tr></table></figure>
+
+<h5 id="二、配置nginx"><a href="#二、配置nginx" class="headerlink" title="二、配置nginx"></a>二、配置nginx</h5><p>首先，我们需要确定我们网站的根目录，如：&#x2F;home&#x2F;wwwroot&#x2F;<a target="_blank" rel="noopener" href="http://www.gurh16.top/">www.gurh16.top</a> 。</p>
+<p>之后，找到并修改&#x2F;etc&#x2F;nginx&#x2F;nginx.conf 。</p>
+<p>可能用到的文件搜索命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo find -name nginx</span><br></pre></td></tr></table></figure>
+
+<p>在nginx.conf中，”#”代表注释，最重要的是server{}块这部分。每个server{}就代表每一个web站点；listen后为监听端口，一般http为80，https为443；server_name为域名；location后为网站根目录的绝对路径。</p>
+<p><img src="https://images2015.cnblogs.com/blog/172889/201704/172889-20170418173628696-1685332558.png" alt="img"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">listen 80;代表监听80端口</span><br><span class="line">server_name xxx.com;代表外网访问的域名</span><br><span class="line">location / &#123;&#125;;代表一个过滤器，/匹配所有请求，我们还可以根据自己的情况定义不同的过滤，比如对静态文件js、css、image制定专属过滤</span><br><span class="line">root html;代表站点根目录</span><br><span class="line">index index.html;代表默认主页</span><br></pre></td></tr></table></figure>
+
+<p>保存，至此我们就完成了最基本的nginx配置！</p>
+<p>记得刷新！！！</p>
+<p> <code>nginx -s reload</code></p>
+<p>Now, 不妨试试用域名访问一下自己的网站吧！XD</p>
+<h5 id="三、获取并配置SSL证书"><a href="#三、获取并配置SSL证书" class="headerlink" title="三、获取并配置SSL证书"></a>三、获取并配置SSL证书</h5><p>证书可通过腾讯云获取，第一年免费使用。</p>
+<p>获取证书后，我们会得到以下两个文件，一个为证书文件，另一个为key。<img src="https://i.loli.net/2020/12/30/wDvfgx6nH7haYod.png" alt="企业微信截图_16091720908073.png"></p>
+<p>将两个证书上传至服务器(推荐目录：&#x2F;etc&#x2F;ssl  本文中使用的目录：&#x2F;home&#x2F;wwwroot&#x2F;<a target="_blank" rel="noopener" href="http://www.gurh16.top/ssl">www.gurh16.top/ssl</a>)</p>
+<p>修改nginx.conf文件：（监听443端口）</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">http&#123;</span><br><span class="line">    <span class="comment">#http节点中可以添加多个server节点</span></span><br><span class="line">    server&#123;</span><br><span class="line">        <span class="comment">#监听443端口</span></span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        <span class="comment">#对应的域名，把baofeidyz.com改成你们自己的域名就可以了</span></span><br><span class="line">        server_name baofeidyz.com;</span><br><span class="line">        <span class="comment">#从腾讯云获取到的第一个文件的全路径</span></span><br><span class="line">        ssl_certificate /etc/ssl/1_baofeidyz.com_bundle.crt;</span><br><span class="line">        <span class="comment">#从腾讯云获取到的第二个文件的全路径</span></span><br><span class="line">        ssl_certificate_key /etc/ssl/2_baofeidyz.com.key;</span><br><span class="line">        ssl_session_timeout 5m;</span><br><span class="line">        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span><br><span class="line">        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;</span><br><span class="line">        ssl_prefer_server_ciphers on;</span><br><span class="line">        <span class="comment">#这是我的主页访问地址，因为使用的是静态的html网页，所以直接使用location就可以完成了。</span></span><br><span class="line">        location / &#123;</span><br><span class="line">                <span class="comment">#文件夹</span></span><br><span class="line">                root /home/wwwroot/www.gurh16.top;</span><br><span class="line">                <span class="comment">#主页文件</span></span><br><span class="line">                index index.html;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    server&#123;</span><br><span class="line">        listen 80;</span><br><span class="line">        server_name www.gurh16.top;</span><br><span class="line">        rewrite ^/(.*)$ https://www.gurh16.top:443/<span class="variable">$1</span> permanent;</span><br><span class="line">    &#125; <span class="comment">#重定向链接</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>刷新！！！</p>
+<p><code>nginx -s reload</code></p>
+<p>大功告成！现在你的网站可以用https访问啦！</p>
+<hr>
+<p>参考链接：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/taiyonghai/p/6728707.html">Nginx Linux详细安装部署教程 - taiyonghai - 博客园 (cnblogs.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zeussbook/p/11231820.html">Nginx配置SSL证书 - 别动我的猫 - 博客园 (cnblogs.com)</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>David Casper Gu
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://ohuai.guru/2020/12/29/%E9%83%A8%E7%BD%B2nginx%E5%8F%8A%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6/" title="本md记录了一次从零配置nginx服务并配置ssl证书的经历">https://ohuai.guru/2020/12/29/部署nginx及配置ssl证书/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/nginx/" rel="tag"># nginx</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/29/%E7%94%A8Hexo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2/" rel="next" title="用Hexo搭建个人博客">
+      用Hexo搭建个人博客 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%ACmd%E8%AE%B0%E5%BD%95%E4%BA%86%E4%B8%80%E6%AC%A1%E4%BB%8E%E9%9B%B6%E9%85%8D%E7%BD%AEnginx%E6%9C%8D%E5%8A%A1%E5%B9%B6%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6%E7%9A%84%E7%BB%8F%E5%8E%86"><span class="nav-number">1.</span> <span class="nav-text">本md记录了一次从零配置nginx服务并配置ssl证书的经历</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%AE%89%E8%A3%85nginx"><span class="nav-number">1.0.1.</span> <span class="nav-text">一、安装nginx</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E9%85%8D%E7%BD%AEnginx"><span class="nav-number">1.0.2.</span> <span class="nav-text">二、配置nginx</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E8%8E%B7%E5%8F%96%E5%B9%B6%E9%85%8D%E7%BD%AESSL%E8%AF%81%E4%B9%A6"><span class="nav-number">1.0.3.</span> <span class="nav-text">三、获取并配置SSL证书</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="David Casper Gu"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">David Casper Gu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:i@ohuai.guru" title="E-Mail → mailto:i@ohuai.guru"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://t.me/gurh16" title="Telegram → https:&#x2F;&#x2F;t.me&#x2F;gurh16" rel="noopener" target="_blank"><i class="fab fa-telegram fa-fw"></i>Telegram</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://mmdjiji.com/" title="https:&#x2F;&#x2F;mmdjiji.com" rel="noopener" target="_blank">吉吉博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David Casper Gu</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'e0a140311c6a6447e935',
+      clientSecret: 'cfdfc513d1a5b2a20ab6d2959bcfbeca2877f2dc',
+      repo        : 'blogtalk',
+      owner       : 'gurh16',
+      admin       : ['gurh16'],
+      id          : 'b988ca5d04a7758f21890cbb451ce2ed',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
